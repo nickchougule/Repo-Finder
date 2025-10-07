@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin-top: 50px;
+    }
+
+    #repo {
+        margin-top: 20px;
+        padding: 20px;
+        border: 1px solid #ccc;
+        display: inline-block;
+        text-align: left;
+    }
+
+    #status {
+        margin-top: 20px;
+        font-weight: bold;
+        color: #555;
+    }
+</style>
+
+<body>
+    <div>
+        <h1>GitHub Repo Finder</h1>
+        <select id="language">
+            <option value="javascript">JavaScript</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+            <option value="c++">C++</option>
+        </select>
+        <button id="fetchBtn">Fetch Repository</button>
+
+        <div id="status"></div>
+
+        <div id="repo" style="display:none;">
+            <h2 id="repo-name"></h2>
+            <p id="repo-desc"></p>
+            <p></p>Stars: <span id="repo-stars"></span></p>
+            <p>Forks: <span id="repo-forks"></span></p>
+            <p>Open Issues: <span id="repo-issues"></span></p>
+            <button id="refreshBtn">Refresh</button>
+        </div>
+    </div>
+
+</body>
+
+<script>
+    const languageSelect = document.getElementById('language');
+    const fetchBtn = document.getElementById('fetchBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    const repoDiv = document.getElementById('repo');
+    const statusDiv = document.getElementById('status');
+
+    const repoName = document.getElementById('repo-name');
+    const repoDesc = document.getElementById('repo-desc');
+    const repoStars = document.getElementById('repo-stars');
+    const repoForks = document.getElementById('repo-forks');
+    const repoIssues = document.getElementById('repo-issues');
+
+    let currentRepos = [];
+
+    async function fetchRepo() {
+        const language = languageSelect.value;
+
+        // Show loading state
+        statusDiv.textContent = 'Loading...';
+        repoDiv.style.display = 'none';
+
+        try {
+            const response = await fetch(`https://api.github.com/search/repositories?q=language:${language}&sort=stars&order=desc`);
+            const data = await response.json();
+
+            if (!data.items || data.items.length === 0) {
+                statusDiv.textContent = 'No repositories found for this language.';
+                return;
+            }
+
+            currentRepos = data.items; 
+            showRandomRepo();
+        } catch (error) {
+            console.error(error);
+            statusDiv.textContent = 'Error fetching repositories. Please try again.';
+        }
+    }
+
+    function showRandomRepo() {
+        if (!currentRepos || currentRepos.length === 0) {
+            statusDiv.textContent = 'No repositories to display.';
+            return;
+        }
+
+        const randomIndex = Math.floor(Math.random() * currentRepos.length);
+        const repo = currentRepos[randomIndex];
+
+        repoName.textContent = repo.name;
+        repoDesc.textContent = repo.description || 'No description available.';
+        repoStars.textContent = repo.stargazers_count;
+        repoForks.textContent = repo.forks_count;
+        repoIssues.textContent = repo.open_issues_count;
+
+        statusDiv.textContent = '';
+        repoDiv.style.display = 'block';
+    }
+
+    // Event listeners
+    fetchBtn.addEventListener('click', fetchRepo);
+    refreshBtn.addEventListener('click', showRandomRepo);
+    languageSelect.addEventListener('change', fetchRepo);
+
+</script>
+
+</html>
